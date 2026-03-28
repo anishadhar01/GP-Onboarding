@@ -4,9 +4,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import time
 
-# ─────────────────────────────────────────────
-#  GLOBAL CONFIG
-# ─────────────────────────────────────────────
 SHEET_ID = "1daMj8z3OC_c-knuEs_5zHs3LiUAgyUXOJndDYzPt_OY"
 
 st.set_page_config(page_title="GP Onboarding", page_icon="📊", layout="wide")
@@ -123,9 +120,6 @@ hr { border: none; border-top: 1px solid #1a2035; margin: 1.5rem 0; }
 </style>
 """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-#  CHART THEME HELPER
-# ─────────────────────────────────────────────
 CHART_BG   = "#07090f"
 GRID_COLOR = "rgba(255,255,255,0.04)"
 FONT_COLOR = "#9aa5be"
@@ -144,9 +138,6 @@ def dark_layout(**kwargs):
     base.update(kwargs)
     return base
 
-# ─────────────────────────────────────────────
-#  LOAD DATA
-# ─────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def load_data():
     MAIN_GID = "0"
@@ -176,13 +167,10 @@ def load_data():
 
 df_main, df_qc = load_data()
 
-# ─────────────────────────────────────────────
-#  AUTO-REFRESH LOGIC
-# ─────────────────────────────────────────────
 if "last_refresh" not in st.session_state:
     st.session_state.last_refresh = time.time()
 
-AUTO_REFRESH_SEC = 300   # 5 minutes
+AUTO_REFRESH_SEC = 300  
 
 elapsed = time.time() - st.session_state.last_refresh
 if elapsed >= AUTO_REFRESH_SEC:
@@ -192,14 +180,10 @@ if elapsed >= AUTO_REFRESH_SEC:
 
 remaining = int(AUTO_REFRESH_SEC - elapsed)
 
-# ─────────────────────────────────────────────
-#  SIDEBAR NAV
-# ─────────────────────────────────────────────
 st.sidebar.markdown("## GP Onboarding")
 st.sidebar.markdown("---")
 page = st.sidebar.radio("Navigate", ["Dashboard", "CPOC Performance", "Raw Data"], label_visibility="collapsed")
 
-# Auto-refresh controls in sidebar
 st.sidebar.markdown("---")
 st.sidebar.markdown(f'<span class="refresh-badge">Auto-refresh in {remaining}s</span>', unsafe_allow_html=True)
 if st.sidebar.button("Refresh Now"):
@@ -208,10 +192,6 @@ if st.sidebar.button("Refresh Now"):
     st.rerun()
 st.sidebar.caption(f"Last refreshed: {pd.Timestamp.now().strftime('%H:%M:%S')}")
 
-
-# ═══════════════════════════════════════════════
-#  DASHBOARD PAGE
-# ═══════════════════════════════════════════════
 if page == "Dashboard":
     df = df_main.copy()
 
@@ -236,7 +216,6 @@ if page == "Dashboard":
         if "Assembly Constituency" in df_qc_filtered.columns:
             df_qc_filtered = df_qc_filtered[df_qc_filtered["Assembly Constituency"].isin(selected_ac)]
 
-    # ── KPIs ──────────────────────────────────
     total  = len(df)
     male   = len(df[df["Gender"] == "Male"])   if "Gender" in df.columns else 0
     female = len(df[df["Gender"] == "Female"]) if "Gender" in df.columns else 0
@@ -261,7 +240,6 @@ if page == "Dashboard":
 
     st.markdown("---")
 
-    # ── QC Summary + Gauge ─────────────────────
     col_a, col_b = st.columns([1.2, 1])
     with col_a:
         st.markdown('<p class="section-title">QC Verification Summary</p>', unsafe_allow_html=True)
@@ -301,7 +279,6 @@ if page == "Dashboard":
 
     st.markdown("---")
 
-    # ── Daily Trend ────────────────────────────
     if "Date" in df.columns:
         st.markdown('<p class="section-title">Daily Onboarding Trend</p>', unsafe_allow_html=True)
         trend = df.groupby("Date").size().reset_index(name="Count")
@@ -333,7 +310,6 @@ if page == "Dashboard":
         st.plotly_chart(fig_trend, use_container_width=True)
         st.markdown("---")
 
-    # ── GPN Category ──────────────────────────
     if "GPN Category" in df_qc_filtered.columns:
         st.markdown('<p class="section-title">GPN Category Distribution</p>', unsafe_allow_html=True)
         gpn_cat = df_qc_filtered["GPN Category"].value_counts().reset_index()
@@ -379,7 +355,6 @@ if page == "Dashboard":
 
         st.markdown("---")
 
-    # ── GPN Call Verification ─────────────────
     if "GPN Call Verification Status" in df_qc_filtered.columns:
         st.markdown('<p class="section-title">GPN Call Verification Status</p>', unsafe_allow_html=True)
         gpn_ver = (
@@ -419,7 +394,6 @@ if page == "Dashboard":
 
         st.markdown("---")
 
-    # ── FA Meeting Status ─────────────────────
     if "FA Meeting Status" in df_qc_filtered.columns:
         st.markdown('<p class="section-title">FA Meeting Status</p>', unsafe_allow_html=True)
         fa = df_qc_filtered["FA Meeting Status"].value_counts().reset_index()
@@ -456,7 +430,6 @@ if page == "Dashboard":
 
         st.markdown("---")
 
-    # ── Occupation Summary (% bar) ─────────────
     occ_col = "Occupation" if "Occupation" in df.columns else ("AU" if "AU" in df.columns else None)
     if occ_col:
         st.markdown('<p class="section-title">Occupation Breakdown</p>', unsafe_allow_html=True)
@@ -510,9 +483,6 @@ if page == "Dashboard":
     st.download_button("Download Filtered Data", df.to_csv(index=False), "filtered_data.csv")
 
 
-# ═══════════════════════════════════════════════
-#  CPOC PERFORMANCE PAGE
-# ═══════════════════════════════════════════════
 elif page == "CPOC Performance":
     st.title("CPOC Performance")
 
@@ -577,7 +547,6 @@ elif page == "CPOC Performance":
 
         st.markdown("---")
 
-        # ── Styled Table ──
         st.markdown('<p class="section-title">CPOC Detail Table</p>', unsafe_allow_html=True)
 
         header_values = [
@@ -629,7 +598,6 @@ elif page == "CPOC Performance":
                                 paper_bgcolor=CHART_BG)
         st.plotly_chart(fig_table, use_container_width=True)
 
-        # ── Bar Chart ──
         st.markdown("---")
         df_charts = df_cpoc_summary[~total_mask].copy()
         st.markdown('<p class="section-title">Individual CPOC Performance</p>', unsafe_allow_html=True)
@@ -697,7 +665,6 @@ elif page == "CPOC Performance":
         )
         st.plotly_chart(fig_today, use_container_width=True)
 
-        # ── Downloads ──
         st.markdown("---")
         dl1, dl2 = st.columns(2)
         with dl1:
@@ -718,9 +685,6 @@ elif page == "CPOC Performance":
         st.warning("No data found in the QC Summary tab.")
 
 
-# ═══════════════════════════════════════════════
-#  RAW DATA PAGE
-# ═══════════════════════════════════════════════
 elif page == "Raw Data":
     st.title("Raw Data Explorer")
 
